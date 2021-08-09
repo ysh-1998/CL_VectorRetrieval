@@ -1,6 +1,7 @@
 import torch
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader
+from gensim.parsing.preprocessing import remove_stopwords
 
 
 class TestDataset(Dataset):
@@ -32,6 +33,7 @@ class TestDataset(Dataset):
             truncation=True,
         )
 
+        doc2 = remove_stopwords(doc2)
         doc2_encoding = self.tokenizer.encode_plus(
             doc_2,
             add_special_tokens=True,
@@ -79,10 +81,25 @@ class TrainDataset(Dataset):
             truncation=True,
         )
 
+        stop_doc = remove_stopwords(doc)
+        stop_doc_encoding = self.tokenizer.encode_plus(
+            stop_doc,
+            add_special_tokens=True,
+            max_length=self.max_len,
+            return_token_type_ids=False,
+            pad_to_max_length=True,
+            return_attention_mask=True,
+            return_tensors='pt',
+            truncation=True,
+        )
+
         return {
             'doc': doc,
             'doc_ids': doc_encoding['input_ids'].flatten(),
             'doc_attention_mask': doc_encoding['attention_mask'].flatten(),
+            'stop_doc': stop_doc,
+            'stop_doc_ids': doc_encoding['input_ids'].flatten(),
+            'stop_doc_attention_mask': doc_encoding['attention_mask'].flatten(),
         }
 
 
@@ -113,8 +130,6 @@ def create_test_data_loader(df, tokenizer, max_len, batch_size, mode='train'):
 def create_train_data_loader(df, tokenizer, max_len, batch_size, mode='train'):
     ds = TrainDataset(
         doc=df.doc.to_numpy(),
-        # positive=df.positive.to_numpy(),
-        # negative=df.negative.to_numpy(),
         tokenizer=tokenizer,
         max_len=max_len
     )
@@ -136,29 +151,8 @@ def create_train_data_loader(df, tokenizer, max_len, batch_size, mode='train'):
 
 def get_data_df(train_dir,test_dir,config):
     df_test = pd.read_csv(test_dir, sep='\t')
-    # df_test2 = pd.read_csv('../test_final.csv')
-    # df_test = df_test[['question1','question2','is_duplicate']]
-    # df_test = pd.concat([df_test,df_test2])
-
-
-    # Train data
-    # df_train = pd.read_csv('../test_final.csv') #
-    # df_train2 = pd.read_csv('../3254_train.csv') #
-    # df_train3 = pd.read_csv('../600_train.csv') #
-    # df_train3 = df_train3.drop('Unnamed: 0',axis=1)
-    # df_train4 = pd.read_csv('../9303_train.csv') #
-    # df_train4.sample(frac=1)
-    # df_train4 = df_train4[:3000]
-    # df_train = pd.concat([df_train,df_train2,df_train3,df_train4])
-
-    #Train data triplet
 
     df_train = pd.read_csv(train_dir, sep='\t')
-    
-    # if config.use_aug_data == True:
-    #   df_train2 = pd.read_csv('./data/triplet_data.csv')
-    #   df_train2 = df_train2.drop('Unnamed: 0',axis=1)
-    #   df_train = pd.concat([df_train,df_train2])
 
     print("数据集尺寸: ", df_train.shape, df_test.shape)
     return df_train, df_test

@@ -1,3 +1,5 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import transformers
 import torch
 import torch.nn as nn
@@ -5,6 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
 
 
 from transformers import AutoModel, AutoTokenizer, AdamW, get_linear_schedule_with_warmup
@@ -20,13 +23,12 @@ from torch.utils.data import Dataset, DataLoader
 
 from dataloader import create_train_data_loader, create_test_data_loader , get_data_df
 from config import get_config
-from loss_function import CosineLoss, QuadrupletLoss, TripletLoss, InfoNCELoss
+from loss_function import InfoNCELoss
 from model import get_model
 import warnings
 warnings.filterwarnings("ignore")
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-# TODO 损失函数改为infoNCE
+
+# TODO 改数据读取方式
 
 def train_epoch(model, data_loader, loss_fn, optimizer,scheduler, device, config, textwriter):
     model.train()
@@ -42,7 +44,18 @@ def train_epoch(model, data_loader, loss_fn, optimizer,scheduler, device, config
         ) # [batch_size,embed_dim]
         # print("doc_outputs:",doc_outputs, doc_outputs.shape)
 
-        loss = loss_fn(doc_outputs)
+        stop_doc_ids = batch["stop_doc_ids"].to(device) # [batch_size,max_length]
+        # print("stop_doc_ids:",stop_doc_ids, stop_doc_ids.shape)
+        stop_doc_attention_mask = batch["stop_doc_attention_mask"].to(device)
+        stop_doc_outputs = model(
+            input_ids=stop_doc_ids,
+            attention_mask=stop_doc_attention_mask
+        ) # [batch_size,embed_dim]
+        # print("stop_doc_outputs:",stop_doc_outputs, stop_doc_outputs.shape)
+
+        batch_outputs = torch.cat([doc_outputs,stop_doc_outputs],dim=1).reshape([doc_outputs.shape[0]*2,])
+
+        loss = loss_fn(batch_outputs)
         losses.append(loss.item())
         loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.clip)
@@ -78,12 +91,14 @@ def eval_model(model, data_loader, loss_fn, device, n_examples, config,textwrite
                 input_ids=doc1_ids,
                 attention_mask=doc1_attention_mask
             ) # [batch_size,embed_dim]
+            doc1_outputs = F.normalize(doc1_outputs, dim=1, p=2)
             print("doc1_outputs:",doc1_outputs,doc1_outputs.shape)
             textwriter.write("doc1_outputs:{} {}\n".format(str(doc1_outputs),str(doc1_outputs.shape)))
             doc2_outputs = model(
                 input_ids=doc2_ids,
                 attention_mask=doc2_attention_mask
             ) # [batch_size,embed_dim]
+            doc2_outputs = F.normalize(doc2_outputs, dim=1, p=2)
             print("doc2_outputs:",doc2_outputs,doc2_outputs.shape)
             textwriter.write("doc2_outputs:{} {}\n".format(str(doc2_outputs),str(doc2_outputs.shape)))
             
@@ -92,25 +107,28 @@ def eval_model(model, data_loader, loss_fn, device, n_examples, config,textwrite
                 distance_list.append(torch.dot(doc1_outputs[i],doc2_outputs[i]))
                 distances.append(torch.dot(doc1_outputs[i],doc2_outputs[i]))
             distance = torch.tensor(distance_list,device='cuda')
-            print("distance1:",distance,distance.shape)
-            textwriter.write("distance1:{} {}\n".format(str(distance),str(distance.shape)))
+            print("distance:",distance,distance.shape)
+            textwriter.write("distance:{} {}\n".format(str(distance),str(distance.shape)))
             
-            correct = distance < config.val_threshold
+            correct = []
+            for i in range(len(distance)):
+                if targets[i] == 1:
+                    if distance[i] > 0.9:
+                        correct.append(1)
+                    else:
+                        correct.append(0)
+                elif targets[i] == 0:
+                    if distance[i] < 0.1:
+                        correct.append(1)
+                    else:
+                        correct.append(0)
+            correct = torch.tensor(correct,device='cuda')
             print("correct:",correct,correct.shape)
             textwriter.write("correct:{} {}\n".format(str(correct),str(correct.shape)))
             
-            correct_item = (~(correct ^ targets.bool())).long()
-            print("correct_item:",correct_item,correct_item.shape)
-            textwriter.write("correct_item:{} {}\n".format(str(correct_item),str(correct_item.shape)))
-            correct_sum = torch.sum(correct_item)
+            correct_sum = torch.sum(correct)
             correct_predictions += correct_sum
     return correct_predictions / n_examples, distances
-
-def distance_f(x1,x2):
-    distance = (x1-x2).pow(2).sum(1).sqrt()
-    distance = 1.0 - (1.0 / (1.0 + distance))
-    # distance = torch.dot(x1,x2)
-    return distance
 
 if __name__ == '__main__':
     config = get_config()
@@ -130,7 +148,7 @@ if __name__ == '__main__':
 
     # Data Loader
     df_train , df_test = get_data_df(config.train_dir, config.val_dir,config)
-    df_train = df_train[:10240]
+    df_train = df_train[:1024]
     df_test = df_test[:32]
     tokenizer = AutoTokenizer.from_pretrained(config.PRE_TRAINED_MODEL_NAME)
     train_data_loader = create_train_data_loader(
@@ -166,10 +184,6 @@ if __name__ == '__main__':
     if config.loss_fn == 'triplet':
         # loss_fn = nn.TripletMarginLoss(margin=1, p=2)
         loss_fn = nn.TripletMarginWithDistanceLoss(distance_function=distance_f,margin=1)
-    elif config.loss_fn == 'cosine' :
-        loss_fn = CosineLoss()
-    elif config.loss_fn == 'custom_triplet':
-        loss_fn = TripletLoss()
     elif config.loss_fn == 'InfoNCE':
         loss_fn = InfoNCELoss()
 
@@ -179,7 +193,6 @@ if __name__ == '__main__':
         'val_acc' : [],
     }
 
-    best_acc = 0
     config.textfile = open(config.log_dir, "w")
 
     for epoch in range(config.epochs):
@@ -197,13 +210,11 @@ if __name__ == '__main__':
             config,
             config.textfile
         )
-        # scheduler.step()
-        
+        scheduler.step()
         print(f'Train loss {train_loss}')
         config.textfile.write(f'Train loss {train_loss}\n')
+        
         val_acc, val_distences = eval_model(
-            # model_anchor,
-            # model_pos_neg,
             model,
             test_data_loader,
             loss_fn,
@@ -212,18 +223,11 @@ if __name__ == '__main__':
             config,
             config.textfile
         )
-
         print(f'Val accuracy {val_acc}')
-        print(f'Val distences {val_distences}')
         config.textfile.write(f'Val accuracy {val_acc}\n')
-        config.textfile.write(f'Val distences {val_distences}')
 
         history['train_loss'].append(train_loss)
         history['val_acc'].append(val_acc)
 
-        # if val_acc > best_acc:
     print('[SAVE] Saving model ... ')
-    # torch.save(model_anchor.state_dict(), config.model_path)
-    # torch.save(model_pos_neg.state_dict(), config.model_path + '_pos_neg')
     torch.save(model.state_dict(), config.model_path+"_"+str(val_acc))
-    best_acc = val_acc

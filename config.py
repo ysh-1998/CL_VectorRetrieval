@@ -56,7 +56,7 @@ def get_config(parse=True, **optional_kwargs):
                         help='num_epochs')
     parser.add_argument('--batch_size', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--lr', type=float, default=0.00003,
+    parser.add_argument('--lr', type=float, default=3e-5,
                         help='learning rate')
     parser.add_argument('--clip', type=float, default=1.0,
                         help='gradient clip norm')
@@ -68,12 +68,11 @@ def get_config(parse=True, **optional_kwargs):
                         choices=['adam', 'amsgrad', 'adagrad','adamw'],
                         help='optimizer')
     parser.add_argument('--loss_fn', type=str, default='InfoNCE',
-                        choices=['triplet', 'cosine', 'custom_triplet','InfoNCE'],
+                        choices=['triplet','InfoNCE'],
                         help='loss function')
     parser.add_argument('--dropout', type=float, default=0.2)
     parser.add_argument('--embed_dim', type=int, default=100)
     parser.add_argument('--freeze', type=bool, default=False)
-    parser.add_argument('--space_joiner', type=bool, default=False)
 
     parser.add_argument('--seed', type=int, default=2804,
                         help='Random seed')
@@ -86,12 +85,7 @@ def get_config(parse=True, **optional_kwargs):
     parser.add_argument('--save_dir', default='./ckpt/')
     parser.add_argument('--log_dir', default='./log/log.txt')
     parser.add_argument('--model_path', default='./ckpt/best_model_state_v1_triplet.bin')
-    
-    parser.add_argument('--train_threshold', default=0.5)
-    parser.add_argument('--val_threshold', default=0.1)
     parser.add_argument('--print_every', default=10)
-    parser.add_argument('--use_aux', default=False)
-    parser.add_argument('--use_aug_data', default=False)
     
     # parser.add_argument('--local_rank', type=int, default=0, help='node rank for distributed training')
     
