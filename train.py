@@ -151,7 +151,7 @@ if __name__ == '__main__':
 
     # Data Loader
     df_train , df_test = get_data_df(config.train_dir, config.val_dir,config)
-    df_train = df_train[:10240]
+    df_train = df_train[:102400]
     df_test = df_test[:32]
     tokenizer = AutoTokenizer.from_pretrained(config.PRE_TRAINED_MODEL_NAME)
     train_data_loader = create_train_data_loader(

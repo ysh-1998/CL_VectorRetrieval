@@ -76,7 +76,7 @@ def get_config(parse=True, **optional_kwargs):
 
     parser.add_argument('--seed', type=int, default=2804,
                         help='Random seed')
-    parser.add_argument('--PRE_TRAINED_MODEL_NAME', default='bert-base-uncased',
+    parser.add_argument('--PRE_TRAINED_MODEL_NAME', default='prajjwal1/bert-small',
                         help='huggingface model name')
 
     # Data placeholder
