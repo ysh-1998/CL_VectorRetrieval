@@ -21,6 +21,7 @@ class SimilarityClassifier(nn.Module):
         )[0]
         # bert_output = torch.mean(bert_output, dim=1)
         # out = self.drop(bert_output)
+        # print("bert_output:", bert_output.shape)
         bert_output = bert_output[:,0]
         out = bert_output
 

@@ -98,8 +98,8 @@ class TrainDataset(Dataset):
             'doc_ids': doc_encoding['input_ids'].flatten(),
             'doc_attention_mask': doc_encoding['attention_mask'].flatten(),
             'stop_doc': stop_doc,
-            'stop_doc_ids': doc_encoding['input_ids'].flatten(),
-            'stop_doc_attention_mask': doc_encoding['attention_mask'].flatten(),
+            'stop_doc_ids': stop_doc_encoding['input_ids'].flatten(),
+            'stop_doc_attention_mask': stop_doc_encoding['attention_mask'].flatten(),
         }
 
 

@@ -8,6 +8,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
+# torch.set_printoptions(profile="full")
 
 
 from transformers import AutoModel, AutoTokenizer, AdamW, get_linear_schedule_with_warmup
@@ -35,15 +36,22 @@ def train_epoch(model, data_loader, loss_fn, optimizer,scheduler, device, config
     losses = []
 
     for step, batch in enumerate(data_loader):
+        # doc = batch["doc"]
+        # stop_doc = batch["stop_doc"]
+        # print(doc)
+        # print(stop_doc)
         doc_ids = batch["doc_ids"].to(device) # [batch_size,max_length]
         # print("doc_ids:",doc_ids, doc_ids.shape)
         stop_doc_ids = batch["stop_doc_ids"].to(device) # [batch_size,max_length]
         # print("stop_doc_ids:",stop_doc_ids, stop_doc_ids.shape)
         input_ids = torch.cat([doc_ids,stop_doc_ids],dim=1).reshape([doc_ids.shape[0]*2,doc_ids.shape[1]])
+        
         doc_attention_mask = batch["doc_attention_mask"].to(device)
         stop_doc_attention_mask = batch["stop_doc_attention_mask"].to(device)
         input_attention_mask = torch.cat([doc_attention_mask,stop_doc_attention_mask],dim=1).reshape([doc_attention_mask.shape[0]*2,doc_attention_mask.shape[1]])
-        print("input_ids:",input_ids, input_ids.shape)
+        
+        # print("input_ids:",input_ids, input_ids.shape)
+        # print("input_attention_mask:",input_attention_mask, input_attention_mask.shape)
         doc_outputs = model(
             input_ids=input_ids,
             attention_mask=input_attention_mask
@@ -87,15 +95,15 @@ def eval_model(model, data_loader, loss_fn, device, n_examples, config,textwrite
                 attention_mask=doc1_attention_mask
             ) # [batch_size,embed_dim]
             doc1_outputs = F.normalize(doc1_outputs, dim=1, p=2)
-            print("doc1_outputs:",doc1_outputs,doc1_outputs.shape)
-            textwriter.write("doc1_outputs:{} {}\n".format(str(doc1_outputs),str(doc1_outputs.shape)))
+            # print("doc1_outputs:",doc1_outputs,doc1_outputs.shape)
+            # textwriter.write("doc1_outputs:{} {}\n".format(str(doc1_outputs),str(doc1_outputs.shape)))
             doc2_outputs = model(
                 input_ids=doc2_ids,
                 attention_mask=doc2_attention_mask
             ) # [batch_size,embed_dim]
             doc2_outputs = F.normalize(doc2_outputs, dim=1, p=2)
-            print("doc2_outputs:",doc2_outputs,doc2_outputs.shape)
-            textwriter.write("doc2_outputs:{} {}\n".format(str(doc2_outputs),str(doc2_outputs.shape)))
+            # print("doc2_outputs:",doc2_outputs,doc2_outputs.shape)
+            # textwriter.write("doc2_outputs:{} {}\n".format(str(doc2_outputs),str(doc2_outputs.shape)))
             
             distance_list = []
             for i in range(doc1_outputs.shape[0]):
@@ -147,7 +155,7 @@ if __name__ == '__main__':
     df_test = df_test[:32]
     tokenizer = AutoTokenizer.from_pretrained(config.PRE_TRAINED_MODEL_NAME)
     train_data_loader = create_train_data_loader(
-        df_train, tokenizer, config.max_len, config.batch_size//2, mode='train')
+        df_train, tokenizer, config.max_len, config.batch_size, mode='train')
     print("训练集:{}个batch".format(len(train_data_loader)))
     test_data_loader = create_test_data_loader(
         df_test, tokenizer, config.max_len, config.batch_size, mode='val')
