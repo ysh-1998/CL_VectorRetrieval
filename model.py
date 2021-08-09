@@ -3,8 +3,6 @@ import torch.nn as nn
 
 from transformers import AutoModel, AutoTokenizer, AdamW, get_linear_schedule_with_warmup
 
-
-
 class SimilarityClassifier(nn.Module):
     def __init__(self, PRE_TRAINED_MODEL_NAME, embed_dim, dropout_p, freeze=False):
         super(SimilarityClassifier, self).__init__()

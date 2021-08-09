@@ -33,7 +33,7 @@ class TestDataset(Dataset):
             truncation=True,
         )
 
-        doc2 = remove_stopwords(doc2)
+        doc_2 = remove_stopwords(doc_2)
         doc2_encoding = self.tokenizer.encode_plus(
             doc_2,
             add_special_tokens=True,
@@ -69,6 +69,7 @@ class TrainDataset(Dataset):
     def __getitem__(self, item):
 
         doc = str(self.doc[item])
+        stop_doc = remove_stopwords(doc)
 
         doc_encoding = self.tokenizer.encode_plus(
             doc,
@@ -81,7 +82,6 @@ class TrainDataset(Dataset):
             truncation=True,
         )
 
-        stop_doc = remove_stopwords(doc)
         stop_doc_encoding = self.tokenizer.encode_plus(
             stop_doc,
             add_special_tokens=True,

@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 import transformers
 import torch
 import torch.nn as nn
@@ -37,25 +37,20 @@ def train_epoch(model, data_loader, loss_fn, optimizer,scheduler, device, config
     for step, batch in enumerate(data_loader):
         doc_ids = batch["doc_ids"].to(device) # [batch_size,max_length]
         # print("doc_ids:",doc_ids, doc_ids.shape)
+        stop_doc_ids = batch["stop_doc_ids"].to(device) # [batch_size,max_length]
+        # print("stop_doc_ids:",stop_doc_ids, stop_doc_ids.shape)
+        input_ids = torch.cat([doc_ids,stop_doc_ids],dim=1).reshape([doc_ids.shape[0]*2,doc_ids.shape[1]])
         doc_attention_mask = batch["doc_attention_mask"].to(device)
+        stop_doc_attention_mask = batch["stop_doc_attention_mask"].to(device)
+        input_attention_mask = torch.cat([doc_attention_mask,stop_doc_attention_mask],dim=1).reshape([doc_attention_mask.shape[0]*2,doc_attention_mask.shape[1]])
+        print("input_ids:",input_ids, input_ids.shape)
         doc_outputs = model(
-            input_ids=doc_ids,
-            attention_mask=doc_attention_mask
+            input_ids=input_ids,
+            attention_mask=input_attention_mask
         ) # [batch_size,embed_dim]
         # print("doc_outputs:",doc_outputs, doc_outputs.shape)
 
-        stop_doc_ids = batch["stop_doc_ids"].to(device) # [batch_size,max_length]
-        # print("stop_doc_ids:",stop_doc_ids, stop_doc_ids.shape)
-        stop_doc_attention_mask = batch["stop_doc_attention_mask"].to(device)
-        stop_doc_outputs = model(
-            input_ids=stop_doc_ids,
-            attention_mask=stop_doc_attention_mask
-        ) # [batch_size,embed_dim]
-        # print("stop_doc_outputs:",stop_doc_outputs, stop_doc_outputs.shape)
-
-        batch_outputs = torch.cat([doc_outputs,stop_doc_outputs],dim=1).reshape([doc_outputs.shape[0]*2,])
-
-        loss = loss_fn(batch_outputs)
+        loss = loss_fn(doc_outputs)
         losses.append(loss.item())
         loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.clip)
@@ -148,11 +143,11 @@ if __name__ == '__main__':
 
     # Data Loader
     df_train , df_test = get_data_df(config.train_dir, config.val_dir,config)
-    df_train = df_train[:1024]
+    df_train = df_train[:10240]
     df_test = df_test[:32]
     tokenizer = AutoTokenizer.from_pretrained(config.PRE_TRAINED_MODEL_NAME)
     train_data_loader = create_train_data_loader(
-        df_train, tokenizer, config.max_len, config.batch_size, mode='train')
+        df_train, tokenizer, config.max_len, config.batch_size//2, mode='train')
     print("训练集:{}个batch".format(len(train_data_loader)))
     test_data_loader = create_test_data_loader(
         df_test, tokenizer, config.max_len, config.batch_size, mode='val')

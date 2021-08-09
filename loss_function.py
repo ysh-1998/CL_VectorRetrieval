@@ -16,6 +16,7 @@ class InfoNCELoss(nn.Module):
         sim_score = torch.matmul(batch_emb, batch_emb.transpose(0,1))
         sim_score = sim_score - torch.eye(batch_size,device='cuda') * 1e12
         sim_score = sim_score / self.lamda
+        print("sim_score:",sim_score, sim_score.shape)
         losses = F.cross_entropy(sim_score,batch_label)
         return losses.mean()
 

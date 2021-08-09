@@ -56,7 +56,7 @@ def get_config(parse=True, **optional_kwargs):
                         help='num_epochs')
     parser.add_argument('--batch_size', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--lr', type=float, default=3e-5,
+    parser.add_argument('--lr', type=float, default=5e-5,
                         help='learning rate')
     parser.add_argument('--clip', type=float, default=1.0,
                         help='gradient clip norm')
@@ -76,7 +76,7 @@ def get_config(parse=True, **optional_kwargs):
 
     parser.add_argument('--seed', type=int, default=2804,
                         help='Random seed')
-    parser.add_argument('--PRE_TRAINED_MODEL_NAME', default='prajjwal1/bert-tiny',
+    parser.add_argument('--PRE_TRAINED_MODEL_NAME', default='bert-base-uncased',
                         help='huggingface model name')
 
     # Data placeholder
