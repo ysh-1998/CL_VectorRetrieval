@@ -64,7 +64,7 @@ def train_epoch(model, data_loader, loss_fn, optimizer,scheduler, device, config
         nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.clip)
         optimizer.step()
         
-        # scheduler.step()
+        scheduler.step()
 
         optimizer.zero_grad()
 
@@ -110,7 +110,7 @@ def eval_model(model, data_loader, loss_fn, device, n_examples, config,textwrite
                 distance_list.append(torch.dot(doc1_outputs[i],doc2_outputs[i]))
                 distances.append(torch.dot(doc1_outputs[i],doc2_outputs[i]))
             distance = torch.tensor(distance_list,device='cuda')
-            print("distance:",distance,distance.shape)
+            # print("distance:",distance,distance.shape)
             textwriter.write("distance:{} {}\n".format(str(distance),str(distance.shape)))
             
             correct = []
@@ -126,7 +126,7 @@ def eval_model(model, data_loader, loss_fn, device, n_examples, config,textwrite
                     else:
                         correct.append(0)
             correct = torch.tensor(correct,device='cuda')
-            print("correct:",correct,correct.shape)
+            # print("correct:",correct,correct.shape)
             textwriter.write("correct:{} {}\n".format(str(correct),str(correct.shape)))
             
             correct_sum = torch.sum(correct)
@@ -151,8 +151,8 @@ if __name__ == '__main__':
 
     # Data Loader
     df_train , df_test = get_data_df(config.train_dir, config.val_dir,config)
-    df_train = df_train[:102400]
-    df_test = df_test[:32]
+    # df_train = df_train[:1024]
+    # df_test = df_test[:32]
     tokenizer = AutoTokenizer.from_pretrained(config.PRE_TRAINED_MODEL_NAME)
     train_data_loader = create_train_data_loader(
         df_train, tokenizer, config.max_len, config.batch_size, mode='train')
@@ -177,12 +177,12 @@ if __name__ == '__main__':
         optimizer = AdamW(model.parameters(), lr=config.lr)
     total_steps = len(train_data_loader) * config.epochs
 
-    # scheduler = get_linear_schedule_with_warmup(
-    #     optimizer,
-    #     num_warmup_steps=1000,
-    #     num_training_steps=total_steps
-    # )
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.1)
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=total_steps//10,
+        num_training_steps=total_steps
+    )
+    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.1)
     
     if config.loss_fn == 'triplet':
         # loss_fn = nn.TripletMarginLoss(margin=1, p=2)
@@ -213,7 +213,7 @@ if __name__ == '__main__':
             config,
             config.textfile
         )
-        scheduler.step()
+        # scheduler.step()
         print(f'Train loss {train_loss}')
         config.textfile.write(f'Train loss {train_loss}\n')
         
