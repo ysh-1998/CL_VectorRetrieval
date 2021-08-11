@@ -56,6 +56,8 @@ def get_config(parse=True, **optional_kwargs):
                         help='num_epochs')
     parser.add_argument('--batch_size', type=int, default=32,
                         help='batch size')
+    parser.add_argument('--q_batch_size', type=int, default=32,
+                        help='query batch size')
     parser.add_argument('--lr', type=float, default=5e-5,
                         help='learning rate')
     parser.add_argument('--clip', type=float, default=1.0,
@@ -63,6 +65,8 @@ def get_config(parse=True, **optional_kwargs):
 
     parser.add_argument('--max_len', type=int, default=100,
                         help='max length') # 100
+    parser.add_argument('--q_max_len', type=int, default=30,
+                        help='query max length') # 100
     
     parser.add_argument('--optim', type=str, default='adamw',
                         choices=['adam', 'amsgrad', 'adagrad','adamw'],
@@ -82,6 +86,9 @@ def get_config(parse=True, **optional_kwargs):
     # Data placeholder
     parser.add_argument('--train_dir', default='/work/yangshenghao/train_data.tsv')
     parser.add_argument('--val_dir', default='/work/yangshenghao/test_data.tsv')
+    parser.add_argument('--querys_dir', default='/work/yangshenghao/collectionandqueries/queries.dev.small.tsv')
+    parser.add_argument('--docs_dir', default='/work/yangshenghao/collectionandqueries/docs.tsv')
+    parser.add_argument('--qrels_dir', default='/work/yangshenghao/collectionandqueries/qrels.dev.small.tsv')
     parser.add_argument('--save_dir', default='./ckpt/')
     parser.add_argument('--log_dir', default='./log/log.txt')
     parser.add_argument('--model_path', default='./ckpt/best_model_state_v1_triplet.bin')

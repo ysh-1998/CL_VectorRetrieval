@@ -27,7 +27,8 @@ class TestDataset(Dataset):
             add_special_tokens=True,
             max_length=self.max_len,
             return_token_type_ids=False,
-            pad_to_max_length=True,
+            padding='max_length',
+            # pad_to_max_length=True,
             return_attention_mask=True,
             return_tensors='pt',
             truncation=True,
@@ -39,7 +40,8 @@ class TestDataset(Dataset):
             add_special_tokens=True,
             max_length=self.max_len,
             return_token_type_ids=False,
-            pad_to_max_length=True,
+            padding='max_length',
+            # pad_to_max_length=True,
             return_attention_mask=True,
             return_tensors='pt',
             truncation=True,
@@ -149,10 +151,73 @@ def create_train_data_loader(df, tokenizer, max_len, batch_size, mode='train'):
             shuffle=False,
         )
 
-def get_data_df(train_dir,test_dir,config):
-    df_test = pd.read_csv(test_dir, sep='\t')
+def get_data_df(querys_dir,docs_dir,qrels_dir):
+    # df_test = pd.read_csv(test_dir, sep='\t')
+    # df_train = pd.read_csv(train_dir, sep='\t')
 
-    df_train = pd.read_csv(train_dir, sep='\t')
+    df_queries = pd.read_csv(querys_dir, sep='\t',header=None)
+    df_docs = pd.read_csv(docs_dir, sep='\t',header=None)
+    df_qrels = pd.read_csv(qrels_dir, sep='\t',header=None,usecols=[0,2])
 
-    print("数据集尺寸: ", df_train.shape, df_test.shape)
-    return df_train, df_test
+    # print("df_queries\n", df_queries)
+    # print("df_docs\n", df_docs)
+    # print("df_qrels\n", df_qrels)
+    return df_queries,df_docs,df_qrels
+
+class QDDataset(Dataset):
+    def __init__(self, ids, texts, tokenizer, max_len):
+        self.ids = ids
+        self.texts = texts
+        self.tokenizer = tokenizer
+        self.max_len = max_len
+    
+    def __len__(self):
+        return len(self.ids)
+
+    def __getitem__(self, item):
+        text = self.texts[item]
+        id = self.ids[item]
+        encoding = self.tokenizer(
+            text,
+            add_special_tokens=True,
+            max_length=self.max_len,
+            return_token_type_ids=False,
+            padding='max_length',
+            return_attention_mask=True,
+            return_tensors='pt',
+            truncation=True,
+        )
+        return {
+            "ids":id,
+            'text': text,
+            'token_ids': encoding['input_ids'].flatten(),
+            'attention_mask': encoding['attention_mask'].flatten(),
+        }
+
+def get_query_data_loader(df_queries,tokenizer,max_len,batch_size):
+    ds = QDDataset(
+        ids=df_queries[0].values.tolist(),
+        texts=df_queries[1].values.tolist(),
+        tokenizer=tokenizer,
+        max_len=max_len
+    )
+    return DataLoader(
+        ds,
+        batch_size=batch_size,
+        num_workers=4,
+        shuffle=False,
+    )
+
+def get_doc_data_loader(df_docs,tokenizer,max_len,batch_size):
+    ds = QDDataset(
+        ids=df_docs[0].values.tolist(),
+        texts=df_docs[1].values.tolist(),
+        tokenizer=tokenizer,
+        max_len=max_len
+    )
+    return DataLoader(
+        ds,
+        batch_size=batch_size,
+        num_workers=4,
+        shuffle=False,
+    )
