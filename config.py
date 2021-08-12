@@ -54,9 +54,9 @@ def get_config(parse=True, **optional_kwargs):
     # Training
     parser.add_argument('--epochs', type=int, default=3,
                         help='num_epochs')
-    parser.add_argument('--batch_size', type=int, default=512,
+    parser.add_argument('--batch_size', type=int, default=100,
                         help='batch size')
-    parser.add_argument('--q_batch_size', type=int, default=1024,
+    parser.add_argument('--q_batch_size', type=int, default=3,
                         help='query batch size')
     parser.add_argument('--lr', type=float, default=5e-5,
                         help='learning rate')
