@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class InfoNCELoss(nn.Module):
     def __init__(self,lamda=0.05):
         super(InfoNCELoss, self).__init__()

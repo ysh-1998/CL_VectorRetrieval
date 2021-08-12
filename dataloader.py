@@ -3,7 +3,6 @@ import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 from gensim.parsing.preprocessing import remove_stopwords
 
-
 class TestDataset(Dataset):
 
     def __init__(self, doc_1, doc_2, targets, tokenizer, max_len):

@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-
 from transformers import AutoModel, AutoTokenizer, AdamW, get_linear_schedule_with_warmup
 
 class SimilarityClassifier(nn.Module):
