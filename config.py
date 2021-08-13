@@ -54,9 +54,11 @@ def get_config(parse=True, **optional_kwargs):
     # Training
     parser.add_argument('--epochs', type=int, default=3,
                         help='num_epochs')
-    parser.add_argument('--batch_size', type=int, default=100,
+    parser.add_argument('--batch_size', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--q_batch_size', type=int, default=3,
+    parser.add_argument('--d_batch_size', type=int, default=1000,
+                        help='doc batch size')
+    parser.add_argument('--q_batch_size', type=int, default=1000,
                         help='query batch size')
     parser.add_argument('--lr', type=float, default=5e-5,
                         help='learning rate')
@@ -66,7 +68,7 @@ def get_config(parse=True, **optional_kwargs):
     parser.add_argument('--max_len', type=int, default=100,
                         help='max length') # 100
     parser.add_argument('--q_max_len', type=int, default=30,
-                        help='query max length') # 100
+                        help='query max length') # 30
     
     parser.add_argument('--optim', type=str, default='adamw',
                         choices=['adam', 'amsgrad', 'adagrad','adamw'],
@@ -91,7 +93,7 @@ def get_config(parse=True, **optional_kwargs):
     parser.add_argument('--qrels_dir', default='/work/yangshenghao/collectionandqueries/qrels.dev.small.tsv')
     parser.add_argument('--save_dir', default='./ckpt/')
     parser.add_argument('--log_dir', default='./log/log.txt')
-    parser.add_argument('--model_path', default='./ckpt/best_model_state_v1_triplet.bin')
+    parser.add_argument('--model_path', default='./ckpt/model_state.bin')
     parser.add_argument('--print_every', default=10)
     
     # parser.add_argument('--local_rank', type=int, default=0, help='node rank for distributed training')

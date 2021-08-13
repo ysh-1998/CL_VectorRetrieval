@@ -150,18 +150,22 @@ def create_train_data_loader(df, tokenizer, max_len, batch_size, mode='train'):
             shuffle=False,
         )
 
-def get_data_df(querys_dir,docs_dir,qrels_dir):
+def get_data_df(querys_dir,docs_dir):
     # df_test = pd.read_csv(test_dir, sep='\t')
     # df_train = pd.read_csv(train_dir, sep='\t')
 
     df_queries = pd.read_csv(querys_dir, sep='\t',header=None)
     df_docs = pd.read_csv(docs_dir, sep='\t',header=None)
-    df_qrels = pd.read_csv(qrels_dir, sep='\t',header=None,usecols=[0,2])
+    # df_qrels = pd.read_csv(qrels_dir, sep='\t',header=None,usecols=[0,2])
 
     # print("df_queries\n", df_queries)
     # print("df_docs\n", df_docs)
     # print("df_qrels\n", df_qrels)
-    return df_queries,df_docs,df_qrels
+    return df_queries,df_docs
+def get_train_data_df(train_dir,test_dir):
+    df_test = pd.read_csv(test_dir, sep='\t')
+    df_train = pd.read_csv(train_dir, sep='\t')
+    return df_train,df_test
 
 class QDDataset(Dataset):
     def __init__(self, ids, texts, tokenizer, max_len):

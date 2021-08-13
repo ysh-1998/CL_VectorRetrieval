@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 import transformers
 import torch
 import torch.nn as nn
@@ -22,7 +22,7 @@ from textwrap import wrap
 from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader
 
-from dataloader import create_train_data_loader, create_test_data_loader , get_data_df
+from dataloader import create_train_data_loader, create_test_data_loader , get_data_df, get_train_data_df
 from config import get_config
 from loss_function import InfoNCELoss
 from model import get_model
@@ -150,8 +150,8 @@ if __name__ == '__main__':
         device = torch.device("cpu")
 
     # Data Loader
-    df_train , df_test = get_data_df(config.train_dir, config.val_dir,config)
-    # df_train = df_train[:1024]
+    df_train , df_test = get_train_data_df(config.train_dir, config.val_dir)
+    df_train = df_train[:40960]
     # df_test = df_test[:32]
     tokenizer = AutoTokenizer.from_pretrained(config.PRE_TRAINED_MODEL_NAME)
     train_data_loader = create_train_data_loader(
@@ -233,4 +233,4 @@ if __name__ == '__main__':
         history['val_acc'].append(val_acc)
 
     print('[SAVE] Saving model ... ')
-    torch.save(model.state_dict(), config.model_path+"_"+str(val_acc))
+    torch.save(model.state_dict(), config.model_path+"_"+str(val_acc.item()))
