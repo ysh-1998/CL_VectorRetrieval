@@ -54,18 +54,18 @@ def get_config(parse=True, **optional_kwargs):
     # Training
     parser.add_argument('--epochs', type=int, default=3,
                         help='num_epochs')
-    parser.add_argument('--batch_size', type=int, default=32,
+    parser.add_argument('--batch_size', type=int, default=128,
                         help='batch size')
     parser.add_argument('--d_batch_size', type=int, default=1000,
                         help='doc batch size')
     parser.add_argument('--q_batch_size', type=int, default=1000,
                         help='query batch size')
-    parser.add_argument('--lr', type=float, default=5e-5,
+    parser.add_argument('--lr', type=float, default=5e-6,
                         help='learning rate')
     parser.add_argument('--clip', type=float, default=1.0,
                         help='gradient clip norm')
 
-    parser.add_argument('--max_len', type=int, default=100,
+    parser.add_argument('--d_max_len', type=int, default=100,
                         help='max length') # 100
     parser.add_argument('--q_max_len', type=int, default=30,
                         help='query max length') # 30
@@ -88,9 +88,10 @@ def get_config(parse=True, **optional_kwargs):
     # Data placeholder
     parser.add_argument('--train_dir', default='/work/yangshenghao/train_data.tsv')
     parser.add_argument('--val_dir', default='/work/yangshenghao/test_data.tsv')
-    parser.add_argument('--querys_dir', default='/work/yangshenghao/collectionandqueries/queries.dev.small.tsv')
-    parser.add_argument('--docs_dir', default='/work/yangshenghao/collectionandqueries/docs.tsv')
-    parser.add_argument('--qrels_dir', default='/work/yangshenghao/collectionandqueries/qrels.dev.small.tsv')
+    parser.add_argument('--train_qd_dir', default='/work/yangshenghao/collectionandqueries/queries_dos_train.tsv')
+    parser.add_argument('--test_querys_dir', default='/work/yangshenghao/collectionandqueries/queries.dev.small.tsv')
+    parser.add_argument('--test_docs_dir', default='/work/yangshenghao/collectionandqueries/docs.tsv')
+    parser.add_argument('--test_qrels_dir', default='/work/yangshenghao/collectionandqueries/qrels.dev.small.tsv')
     parser.add_argument('--save_dir', default='./ckpt/')
     parser.add_argument('--log_dir', default='./log/log.txt')
     parser.add_argument('--model_path', default='./ckpt/model_state.bin')
