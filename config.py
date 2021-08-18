@@ -52,7 +52,7 @@ def get_config(parse=True, **optional_kwargs):
     """
     parser = argparse.ArgumentParser()
     # Training
-    parser.add_argument('--epochs', type=int, default=3,
+    parser.add_argument('--epochs', type=int, default=10,
                         help='num_epochs')
     parser.add_argument('--batch_size', type=int, default=128,
                         help='batch size')

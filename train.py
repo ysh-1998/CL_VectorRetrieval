@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 import transformers
 import torch
 import torch.nn as nn
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     tokenizer = AutoTokenizer.from_pretrained(config.PRE_TRAINED_MODEL_NAME)
     # Train Data Loader
     df_train_qds = pd.read_csv(config.train_qd_dir, sep='\t',header=None)
-    df_train_qds = df_train_qds[:10240]
+    df_train_qds = df_train_qds[:40960]
     train_qd_loader = get_train_qd_loader(
         df_train_qds,tokenizer,config.q_max_len,config.d_max_len,config.batch_size,mode='train')
     print(f"train_qd_pairs: {len(df_train_qds)},train_batchs:{len(train_qd_loader)}")
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     model = model.to(device)
     print("加载模型")
     # model.load_state_dict(torch.load(config.model_path))
-    model.load_state_dict(torch.load("ckpt/0.8996_model_state.bin"))
+    model.load_state_dict(torch.load("ckpt/0.9201_model_state.bin"))
     # 分布式训练
     # model = nn.parallel.DistributedDataParallel(model,device_ids=[local_rank],broadcast_buffers=False,find_unused_parameters=True)
 
@@ -237,7 +237,7 @@ if __name__ == '__main__':
             print('{}: {}'.format(metric, metrics[metric]))
             logfile.write('{}: {}\n'.format(metric, metrics[metric]))
         print('#####################')
-        MRR = metrics['MRR @10']
+        MRR = round(metrics['MRR @10'],4)
         if MRR > best_MRR:
             best_MRR = MRR
             print('[SAVE] Saving model ... ')

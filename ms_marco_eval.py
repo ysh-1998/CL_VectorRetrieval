@@ -1,9 +1,9 @@
 """
-This module computes evaluation metrics for MSMARCO dataset on the ranking task. Intenral hard coded eval files version. DO NOT PUBLISH!
+This module computes evaluation metrics for MSMARCO dataset on the ranking task.
 Command line:
-python msmarco_eval_ranking.py <path_to_candidate_file>
+python msmarco_eval_ranking.py <path_to_reference_file> <path_to_candidate_file>
 Creation Date : 06/12/2018
-Last Modified : 4/09/2019
+Last Modified : 1/21/2019
 Authors : Daniel Campos <dacamp@microsoft.com>, Rutger van Haasteren <ruvanh@microsoft.com>
 """
 import sys
@@ -122,20 +122,17 @@ def compute_metrics(qids_to_relevant_passageids, qids_to_ranked_candidate_passag
             candidate_pid = qids_to_ranked_candidate_passages[qid]
             for i in range(0,MaxMRRRank):
                 if candidate_pid[i] in target_pid:
+                    print("relevance doc rank:", i)
                     MRR += 1/(i + 1)
                     ranking.pop()
                     ranking.append(i+1)
-                    # print("rel doc position:",i)
                     break
-            # else:
-                # print("no rel doc position")
+            else:
+                print("no relevance doc")
     if len(ranking) == 0:
         raise IOError("No matching QIDs found. Are you sure you are scoring the evaluation set?")
-    print(len(qids_to_relevant_passageids))
-    print(len(qids_to_ranked_candidate_passages))
-    print(MRR)
-    # MRR = MRR/len(qids_to_relevant_passageids)
-    MRR = MRR / len(qids_to_ranked_candidate_passages)
+    
+    MRR = MRR/len(qids_to_relevant_passageids)
     all_scores['MRR @10'] = MRR
     all_scores['QueriesRanked'] = len(qids_to_ranked_candidate_passages)
     return all_scores
@@ -167,14 +164,21 @@ def compute_metrics_from_files(path_to_reference, path_to_candidate, perform_che
 
 def main():
     """Command line:
-    python msmarco_eval_ranking.py <path to reference> <path_to_candidate_file>
+    python msmarco_eval_ranking.py <path_to_reference_file> <path_to_candidate_file>
     """
-    path_to_candidate = sys.argv[2] 
-    path_to_reference = sys.argv[1]
-    metrics = compute_metrics_from_files(path_to_reference, path_to_candidate)
-    print('#####################')
-    for metric in sorted(metrics):
-        print('{}: {}'.format(metric, metrics[metric]))
-    print('#####################')
+
+    if len(sys.argv) == 3:
+        path_to_reference = sys.argv[1]
+        path_to_candidate = sys.argv[2]
+        metrics = compute_metrics_from_files(path_to_reference, path_to_candidate)
+        print('#####################')
+        for metric in sorted(metrics):
+            print('{}: {}'.format(metric, metrics[metric]))
+        print('#####################')
+
+    else:
+        print('Usage: msmarco_eval_ranking.py <reference ranking> <candidate ranking>')
+        exit()
+    
 if __name__ == '__main__':
     main()
