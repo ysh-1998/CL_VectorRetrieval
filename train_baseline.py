@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import transformers
 import torch
 import torch.nn as nn
@@ -173,9 +173,9 @@ if __name__ == '__main__':
     cfg = BertConfig.from_dict(cfg)
     model = get_model(config,cfg)
     model = model.to(device)
-    print("加载模型")
+    # print("加载模型")
     # model.load_state_dict(torch.load(config.model_path))
-    model.load_state_dict(torch.load("ckpt/0.9435_model_state.bin"))
+    # model.load_state_dict(torch.load("ckpt/model_state.bin_0.2506"))
     # 分布式训练
     # model = nn.parallel.DistributedDataParallel(model,device_ids=[local_rank],broadcast_buffers=False,find_unused_parameters=True)
     scaler = GradScaler()
@@ -239,8 +239,8 @@ if __name__ == '__main__':
             config,
             logfile
         )
-        qd_rank.to_csv("result/9435qd_rank.tsv",sep='\t',index=False,header=False)
-        metrics = compute_metrics_from_files(config.test_qrels_dir, "result/9435qd_rank.tsv")
+        qd_rank.to_csv("result/base_qd_rank.tsv",sep='\t',index=False,header=False)
+        metrics = compute_metrics_from_files(config.test_qrels_dir, "result/base_qd_rank.tsv")
         print('#####################')
         for metric in sorted(metrics):
             print('{}: {}'.format(metric, metrics[metric]))

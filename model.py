@@ -3,10 +3,10 @@ import torch.nn as nn
 from transformers import AutoModel, AutoTokenizer, AdamW, get_linear_schedule_with_warmup
 
 class SimilarityClassifier(nn.Module):
-    def __init__(self, PRE_TRAINED_MODEL_NAME, embed_dim, dropout_p, freeze=False):
+    def __init__(self, PRE_TRAINED_MODEL_NAME, cfg,embed_dim, dropout_p, freeze=False):
         super(SimilarityClassifier, self).__init__()
         # self.bert = DistilBertModel.from_pretrained(PRE_TRAINED_MODEL_NAME)
-        self.bert = AutoModel.from_pretrained(PRE_TRAINED_MODEL_NAME)
+        self.bert = AutoModel.from_pretrained(PRE_TRAINED_MODEL_NAME,config=cfg)
         self.drop = nn.Dropout(p=0.3)
         self.sigmoid = nn.Sigmoid()
         if freeze:
@@ -26,6 +26,6 @@ class SimilarityClassifier(nn.Module):
 
         return out
 
-def get_model(config):
-    model = SimilarityClassifier(config.PRE_TRAINED_MODEL_NAME, config.embed_dim, config.dropout,config.freeze)
+def get_model(config,cfg):
+    model = SimilarityClassifier(config.PRE_TRAINED_MODEL_NAME, cfg, config.embed_dim, config.dropout,config.freeze)
     return model
